@@ -1,12 +1,9 @@
 #!/bin/bash
 
+#!/bin/bash
+
 summary="$2"
 body="$3"
-
-# fix for pulse applet
-if [ "$summary" == "pa-applet" ]
-then    summary="Adjusting Output Volume";
-fi
 
 # avoid talking over
 count=0
@@ -16,7 +13,11 @@ while :; do
         (( counter += 1 ))
         sleep 4s
     else
-        mimic -t "$summary, $body" -voice slt
+        # volume up and down can be anoying so we ingore it
+        if [ "$summary" == "pa-applet" ]
+          then    echo "ignore";
+          else    mimic -t "$summary, $body" -voice slt;
+        fi
         break
     fi
 done
