@@ -1,0 +1,75 @@
+#!/usr/bin/env python3 
+import subprocess
+import sys
+import psutil
+import time
+import logging
+
+# Set a temporary log for matching purposes > /tmp/webdad-speech.log
+APP_NAME = "webdad-speech"
+# The f below is a formatter and does string
+# replacement, python 3.6 and up only.
+log_file = f"/tmp/{APP_NAME}.log"
+log = logging.getLogger()
+# Set logging to use a file.
+file_handler = logging.FileHandler(log_file, mode='w')
+log.addHandler(file_handler)
+log.setLevel(logging.INFO)
+
+
+def voice(title, body, tts="mimic"):
+    # default tts is mimic others could be supported.
+    if tts == "mimic":
+        # Run voice application in a additional process.
+        subprocess.run([tts, "-t", f"{title} {body}", "-voice", "slt"])
+    # exit application.
+    sys.exit(0)
+
+
+def voice_active():
+    # check if voice is already running, iterating
+    # all processes and looking for a match.
+    for proc in psutil.process_iter():
+        if proc.name() == 'mimic':
+            return True
+    else:
+        return False
+
+
+def main():
+    try:
+        # Get notification title from command line argument n1.
+        title = sys.argv[1]
+    except IndexError:
+        title = ""
+
+    # Log to file.
+    log.info(f"Title Output = {title}")
+
+    try:
+        # Get notification body from command line argument n2.
+        body = sys.argv[2]
+    except IndexError:
+        body = ""
+
+    log.info(f"Body  Output = {body}")
+
+    # Words in the title that will be ignored by voice.
+    ignore_words_in_title = (
+        "disconnected", "connection",
+        "pa-applet", "bluetooth")
+
+    # search for words in ignore_words.
+    for word in ignore_words_in_title:
+        # if word matches words in the title exit.
+        if word in title.lower():
+            sys.exit(0)
+
+    else:
+        voice(title, body)
+
+
+while voice_active():
+    time.sleep(1)
+else:
+    main()
