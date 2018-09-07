@@ -17,11 +17,27 @@ log.addHandler(file_handler)
 log.setLevel(logging.INFO)
 
 
+def get_sinks():
+    # Get applications outputting sound
+    p = subprocess.run('pacmd list-sink-inputs | grep "index:" | cut -b12-', stdout=subprocess.PIPE, shell=True)
+    return p.stdout.decode('utf-8').split()
+
+
+def mute_sound(boolean):
+    for sink in get_sinks():
+        # Mute unmute applications
+        subprocess.run(f'pacmd set-sink-input-mute {sink} {boolean}', shell=True)
+
+
 def voice(title, body, tts="mimic"):
     # default tts is mimic others could be supported.
     if tts == "mimic":
-        # Run voice application in a additional process.
+        # Temporarily mute sound so we can output voice msg.
+        mute_sound("true")
+        # Run voice application.
         subprocess.run([tts, "-t", f"{title} {body}", "-voice", "slt"])
+    # Voice msg done unmute applications.
+    mute_sound("false")
     # exit application.
     sys.exit(0)
 
@@ -73,3 +89,4 @@ while voice_active():
     time.sleep(1)
 else:
     main()
+    
